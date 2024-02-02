@@ -1,0 +1,17 @@
+model:
+  unet:
+    in_channels: 3
+    out_channels: 3
+    hidden_size: 128
+  beta1: 1e-4
+  beta2: 0.02
+  num_timestamps: 1000
+
+training:
+  batch_size: 128
+  num_workers: 4
+  lr: 1e-5
+
+wandb:
+  project: "efdl_hw",
+  name: "full_run"
