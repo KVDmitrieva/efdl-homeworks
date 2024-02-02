@@ -29,7 +29,7 @@ def test_train_on_one_batch(device, train_dataset):
         betas=(1e-4, 0.02),
         num_timesteps=1000,
     )
-    ddpm = ddpm.to(device)
+    ddpm = ddpm.to(device)      # fix device
 
     optim = torch.optim.Adam(ddpm.parameters(), lr=5e-4)
     dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
