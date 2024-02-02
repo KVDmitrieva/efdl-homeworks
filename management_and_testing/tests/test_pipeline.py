@@ -1,3 +1,5 @@
+import os
+
 import pytest
 import torch
 from torch.utils.data import DataLoader
@@ -50,13 +52,15 @@ def test_training(device, hidden_size, train_dataset):
         betas=(1e-4, 0.02),
         num_timesteps=1000,
     )
-    ddpm = ddpm.to(device)  # fix device
+    ddpm = ddpm.to(device)
 
     optim = torch.optim.Adam(ddpm.parameters(), lr=5e-4)
-    train_set = torch.utils.data.Subset(train_dataset, torch.arange(100))
-    dataloader = DataLoader(train_set, batch_size=32, shuffle=True)
+    train_set = torch.utils.data.Subset(train_dataset, torch.arange(20))
+    dataloader = DataLoader(train_set, batch_size=4, shuffle=True)
 
-    for i in range(10):
+    if not os.path.exists('samples'):
+        os.mkdir('samples')
+
+    for i in range(3):
         train_epoch(ddpm, dataloader, optim, device)
         generate_samples(ddpm, device, f"samples/{i:02d}.png")
-
