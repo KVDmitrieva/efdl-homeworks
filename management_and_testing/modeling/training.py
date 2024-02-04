@@ -1,3 +1,4 @@
+from numpy import nonzero
 import torch
 from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
@@ -21,7 +22,7 @@ def train_step(model: DiffusionModel, inputs: torch.Tensor, optimizer: Optimizer
 
 
 def train_epoch(model: DiffusionModel, dataloader: DataLoader, optimizer: Optimizer,
-                device: str, log_metrics: bool = False, log_media: bool = False):
+                device: str, log_metrics: bool = False):
     model.train()
     pbar = tqdm(dataloader)
     loss_ema = None
@@ -37,21 +38,19 @@ def train_epoch(model: DiffusionModel, dataloader: DataLoader, optimizer: Optimi
             )
         pbar.set_description(f"loss: {loss_ema:.4f}")
 
-    if log_media:
-        input_image = to_pil_image(make_grid(x, nrow=4))
-        generated_image = model(x.to(device)).detach().cpu()
-        generated_image = to_pil_image(make_grid(generated_image, nrow=4))
-        wandb.log(
-            {
-                "Input": wandb.Image(input_image),
-                "Generated images": wandb.Image(generated_image),
-            }
-        )
 
-
-def generate_samples(model: DiffusionModel, device: str, path: str):
+def generate_samples(model: DiffusionModel, device: str, path: str, x=None):
     model.eval()
     with torch.no_grad():
-        samples = model.sample(8, (3, 32, 32), device=device)
+        samples = model.sample(8, (3, 32, 32), device=device, x=x)
         grid = make_grid(samples, nrow=4)
         save_image(grid, path)
+
+        if x is not None:
+            input_image = to_pil_image(make_grid(x, nrow=4))
+            wandb.log(
+                {
+                    "Input": wandb.Image(input_image),
+                    "Generated images": wandb.Image(grid),
+                }
+            )

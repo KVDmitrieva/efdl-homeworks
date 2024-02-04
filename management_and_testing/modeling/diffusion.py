@@ -31,9 +31,9 @@ class DiffusionModel(nn.Module):
 
         return self.criterion(eps, self.eps_model(x_t, timestep / self.num_timesteps))
 
-    def sample(self, num_samples: int, size, device) -> torch.Tensor:
+    def sample(self, num_samples: int, size, device, x=None) -> torch.Tensor:
 
-        x_i = torch.randn(num_samples, *size, device=device)    # fix device
+        x_i = torch.randn(num_samples, *size, device=device)  if x is None else x.to(device)  # fix device
 
         for i in range(self.num_timesteps, 0, -1):
             z = torch.randn(num_samples, *size, device=device) if i > 1 else 0      # fix device

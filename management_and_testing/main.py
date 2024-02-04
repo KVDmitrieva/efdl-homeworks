@@ -1,9 +1,10 @@
+import os
+
 import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
 
-import argparse
 import hydra
 import omegaconf
 import wandb
@@ -13,9 +14,10 @@ from modeling.training import generate_samples, train_epoch
 from modeling.unet import UnetModel
 
 
-@hydra.main(config_name="config")
-def main(cfg, wandb_key: str, device: str, num_epochs: int = 100):
-    wandb.login(key=wandb_key)
+@hydra.main(config_path='.', config_name="config")
+def main(cfg):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
     wandb.init(project=cfg.wandb.project, name=cfg.wandb.name)
     wandb.config = omegaconf.OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True)
 
@@ -40,20 +42,14 @@ def main(cfg, wandb_key: str, device: str, num_epochs: int = 100):
     dataloader = DataLoader(dataset, batch_size=cfg.training.batch_size, num_workers=cfg.training.num_workers, shuffle=True)
     optim = torch.optim.Adam(ddpm.parameters(), lr=cfg.training.lr)
 
-    for i in range(num_epochs):
-        train_epoch(ddpm, dataloader, optim, device)
+    fixed_input = torch.randn(cfg.training.batch_size, *(cfg.model.unet.in_channels, 32, 32))
+    if not os.path.exists('samples'):
+        os.mkdir('samples')
+    for i in range(cfg.training.num_epochs):
+        train_epoch(ddpm, dataloader, optim, device, log_metrics=True)
         generate_samples(ddpm, device, f"samples/{i:02d}.png")
+        generate_samples(ddpm, device, f"samples/fixed_{i:02d}.png", fixed_input)
 
 
 if __name__ == "__main__":
-    args = argparse.ArgumentParser()
-    args.add_argument(
-        "-k",
-        "--key",
-        default=None,
-        type=str,
-        help="wandb key for logging",
-    )
-    args = args.parse_args()
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    main(wandb_key=args.key, device=device)
+    main()

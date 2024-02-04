@@ -8,10 +8,11 @@ model:
   num_timestamps: 1000
 
 training:
+  num_epochs: 100
   batch_size: 128
   num_workers: 4
   lr: 1e-5
 
 wandb:
-  project: "efdl_hw",
+  project: "efdl_hw"
   name: "full_run"
