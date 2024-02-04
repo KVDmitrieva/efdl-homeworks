@@ -19,10 +19,11 @@ def main(cfg):
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     wandb.init(project=cfg.wandb.project, name=cfg.wandb.name)
-    wandb.config = omegaconf.OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True)
+    wandb.config.update(omegaconf.OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True))
 
     ddpm = DiffusionModel(
-        eps_model=UnetModel(cfg.model.unet.in_channels, cfg.model.unet.out_channels, hidden_size=cfg.model.unet.hidden_size),
+        eps_model=UnetModel(cfg.model.unet.in_channels, cfg.model.unet.out_channels,
+                            hidden_size=cfg.model.unet.hidden_size),
         betas=(cfg.model.beta1, cfg.model.beta2),
         num_timesteps=cfg.model.num_timestamps,
     )
@@ -39,10 +40,11 @@ def main(cfg):
         transform=train_transforms,
     )
 
-    dataloader = DataLoader(dataset, batch_size=cfg.training.batch_size, num_workers=cfg.training.num_workers, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=cfg.training.batch_size, num_workers=cfg.training.num_workers,
+                            shuffle=True)
     optim = torch.optim.Adam(ddpm.parameters(), lr=cfg.training.lr)
 
-    fixed_input = torch.randn(cfg.training.batch_size, *(cfg.model.unet.in_channels, 32, 32))
+    fixed_input = torch.randn(8, *(cfg.model.unet.in_channels, 32, 32))
     if not os.path.exists('samples'):
         os.mkdir('samples')
     for i in range(cfg.training.num_epochs):

@@ -43,7 +43,7 @@ def generate_samples(model: DiffusionModel, device: str, path: str, x=None):
     model.eval()
     with torch.no_grad():
         samples = model.sample(8, (3, 32, 32), device=device, x=x)
-        grid = make_grid(samples, nrow=4)
+        grid = make_grid(samples, nrow=4, normalize=True)   # normalize
         save_image(grid, path)
 
         if x is not None:
