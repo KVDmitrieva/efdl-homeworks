@@ -30,9 +30,7 @@ def main(cfg):
     )
     ddpm = ddpm.to(device)
 
-    train_transforms = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
-    )
+    train_transforms = instantiate(cfg.augmentations)
 
     dataset = CIFAR10(
         "cifar10",
