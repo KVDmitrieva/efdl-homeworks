@@ -22,8 +22,8 @@ def main(cfg):
     wandb.init(project=cfg.wandb.project, name=cfg.wandb.name)
     wandb.config.update(omegaconf.OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True))
 
-    artifact = wandb.Artifact(name="hydra config", type="config")
-    artifact.add_dir(local_path="./config.yaml")
+    artifact = wandb.Artifact(name="hydra_config", type="config")
+    artifact.add_file(local_path="../../../config.yaml")
     wandb.log_artifact(artifact)
 
     ddpm = DiffusionModel(
