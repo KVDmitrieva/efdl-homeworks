@@ -8,6 +8,7 @@ from torchvision.datasets import CIFAR10
 import hydra
 import omegaconf
 import wandb
+from hydra.utils import instantiate
 
 from modeling.diffusion import DiffusionModel
 from modeling.training import generate_samples, train_epoch
@@ -42,7 +43,8 @@ def main(cfg):
 
     dataloader = DataLoader(dataset, batch_size=cfg.training.batch_size, num_workers=cfg.training.num_workers,
                             shuffle=True)
-    optim = torch.optim.Adam(ddpm.parameters(), lr=cfg.training.lr)
+    # optim = torch.optim.Adam(ddpm.parameters(), lr=cfg.training.lr)
+    optim = instantiate(cfg.optimizer, params=ddpm.parameters())
 
     fixed_input = torch.randn(8, *(cfg.model.unet.in_channels, 32, 32))
     if not os.path.exists('samples'):

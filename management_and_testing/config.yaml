@@ -7,11 +7,15 @@ model:
   beta2: 0.02
   num_timestamps: 1000
 
+optimizer:
+  _target_: torch.optim.Adam
+  lr: 1e-5
+  betas: (0.9, 0.999)
+
 training:
   num_epochs: 100
   batch_size: 128
   num_workers: 4
-  lr: 1e-5
 
 wandb:
   project: "efdl_hw"
