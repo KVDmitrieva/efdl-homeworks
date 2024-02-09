@@ -22,6 +22,10 @@ def main(cfg):
     wandb.init(project=cfg.wandb.project, name=cfg.wandb.name)
     wandb.config.update(omegaconf.OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True))
 
+    artifact = wandb.Artifact(name="hydra config", type="config")
+    artifact.add_dir(local_path="./config.yaml")
+    wandb.log_artifact(artifact)
+
     ddpm = DiffusionModel(
         eps_model=UnetModel(cfg.model.unet.in_channels, cfg.model.unet.out_channels,
                             hidden_size=cfg.model.unet.hidden_size),
