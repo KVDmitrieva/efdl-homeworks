@@ -14,11 +14,13 @@ augmentations:
       - _target_: torchvision.transforms.Normalize
         mean: [0.5, 0.5, 0.5]
         std: [0.5, 0.5, 0.5]
+      - _target_: torchvision.transforms.RandomHorizontalFlip
+        p: 0.5
 
 optimizer:
-  _target_: torch.optim.SGD
-  lr: 1e-3
-  momentum: 1e-4
+  _target_: torch.optim.Adam
+  lr: 1e-5
+  betas: [0.9, 0.999]
 
 training:
   num_epochs: 20
@@ -27,4 +29,4 @@ training:
 
 wandb:
   project: "efdl_hw"
-  name: "change_optimizer_and_lr"
+  name: "random_flip"
