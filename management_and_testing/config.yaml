@@ -16,15 +16,15 @@ augmentations:
         std: [0.5, 0.5, 0.5]
 
 optimizer:
-  _target_: torch.optim.Adam
-  lr: 1e-5
-  betas: [0.9, 0.999]
+  _target_: torch.optim.SGD
+  lr: 1e-3
+  momentum: 1e-4
 
 training:
-  num_epochs: 100
+  num_epochs: 20
   batch_size: 128
   num_workers: 4
 
 wandb:
   project: "efdl_hw"
-  name: "full_run"
+  name: "change_optimizer_and_lr"
