@@ -2,8 +2,6 @@ import torch
 from torch import nn
 from tqdm.auto import tqdm
 
-from typing import Optional
-
 from unet import Unet
 
 from dataset import get_train_data
@@ -16,7 +14,7 @@ def train_epoch(
     model: torch.nn.Module,
     criterion: torch.nn.modules.loss._Loss,
     optimizer: torch.optim.Optimizer,
-    scaler: Optional[CustomScaler, torch.cuda.amp.GradScaler],
+    scaler: CustomScaler | torch.cuda.amp.GradScaler,
     device: torch.device,
 ) -> None:
     model.train()
