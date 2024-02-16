@@ -33,8 +33,8 @@ class BaseBrainDataset(Dataset):
 
     @staticmethod
     def text_iterator(file_path: str, limit=1e5):
-        with open(file_path, "w") as f:
-            for i, line in f:
+        with open(file_path, encoding="utf-8") as f:
+            for i, line in enumerate(f):
                 if i >= limit:
                     break
                 yield line
