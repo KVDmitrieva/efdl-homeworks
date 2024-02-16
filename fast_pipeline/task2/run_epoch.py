@@ -39,23 +39,15 @@ def run_epoch(data_mode: DataMode, data_path: str) -> list:
     device = torch.device("cuda:0")
 
     model = MiniGPT2(brain_dataset.vocab_len).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=LR)
-    criterion = nn.CrossEntropyLoss()
 
-    # https://pytorch.org/blog/accelerating-pytorch-with-cuda-graphs/
-    static_input = torch.randint(BATCH_SIZE, 640, device='cuda')
-    static_target = torch.randint(BATCH_SIZE, device='cuda')
-
-    s = torch.cuda.Stream()
-    s.wait_stream(torch.cuda.current_stream())
-    with torch.cuda.stream(s):
-        for i in range(3):
-            optimizer.zero_grad(set_to_none=True)
-            y_pred = model(static_input)
-            loss = criterion(y_pred, static_target)
-            loss.backward()
-            optimizer.step()
-    torch.cuda.current_stream().wait_stream(s)
+    # warm-up
+    model.train()
+    for i, (src, labels) in data_loader:
+        if i > 10:
+            break
+        torch.cuda.synchronize()
+        src = src.to(device)
+        _ = model(src)
 
     pbar = tqdm(enumerate(data_loader), total=len(data_loader))
 
