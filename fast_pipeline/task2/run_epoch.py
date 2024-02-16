@@ -1,5 +1,7 @@
 from enum import Enum
 
+import time
+
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -20,7 +22,7 @@ BATCH_SIZE = 128
 LR = 1e-4
 
 
-def run_epoch(data_mode: DataMode, data_path: str) -> None:
+def run_epoch(data_mode: DataMode, data_path: str) -> list:
     if data_mode == DataMode.BRAIN:
         brain_dataset = BrainDataset(data_path)
         data_loader = DataLoader(brain_dataset, batch_size=BATCH_SIZE, shuffle=True)
@@ -58,15 +60,13 @@ def run_epoch(data_mode: DataMode, data_path: str) -> None:
     pbar = tqdm(enumerate(data_loader), total=len(data_loader))
 
     model.train()
-    for i, (images, labels) in pbar:
-        images = images.to(device)
-        labels = labels.to(device)
+    times = []
+    for i, (src, labels) in pbar:
+        torch.cuda.synchronize()
+        src = src.to(device)
+        start = time.perf_counter()
+        _ = model(src)
+        end = time.perf_counter()
+        times.append(end - start)
 
-        optimizer.zero_grad()
-        outputs = model(images)
-        loss = criterion(outputs, labels)
-
-        accuracy = ((outputs > 0.5) == labels).float().mean()
-
-        pbar.set_description(f"Loss: {round(loss.item(), 4)} " f"Accuracy: {round(accuracy.item() * 100, 4)}")
-
+    return times
