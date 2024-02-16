@@ -15,6 +15,32 @@ from torch.nn.modules.normalization import LayerNorm
 from torch.nn.parameter import Parameter
 
 
+class MiniGPT2(nn.Module):
+    def __init__(self, ntoken: int, d_model: int = 512, nhead: int = 8, d_hid: int = 1024,
+                 dropout: float = 0.5, pad_idx: int = 0):
+        super().__init__()
+        self.encoder = nn.Embedding(ntoken, d_model)
+        self.pos_encoder = PositionalEncoding(d_model, dropout)
+        self.d_model = d_model
+        self.decoder = TransformerEncoderLayer(d_model, nhead, d_hid)
+        self.pad_idx = pad_idx
+
+        self.init_weights()
+
+    def init_weights(self) -> None:
+        initrange = 0.1
+        self.decoder.bias.data.zero_()
+        self.decoder.weight.data.uniform_(-initrange, initrange)
+
+    def forward(self, src: Tensor) -> Tensor:
+        src = self.encoder(src) * math.sqrt(self.d_model)
+        src = self.pos_encoder(src)
+        pad_mask = (src == self.pad_idx).to(src.device)
+        src_mask = generate_square_subsequent_mask(len(src)).to(src.device)
+        output = self.decoder(src, src_mask, pad_mask)
+        return output
+
+
 class TransformerModel(nn.Module):
     def __init__(self, ntoken: int, d_model: int, nhead: int, d_hid: int, nlayers: int, dropout: float = 0.5):
         super().__init__()
