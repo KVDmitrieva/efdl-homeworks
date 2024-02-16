@@ -43,8 +43,8 @@ def run_epoch(data_mode: DataMode, data_path: str) -> list:
     criterion = nn.CrossEntropyLoss()
 
     # https://pytorch.org/blog/accelerating-pytorch-with-cuda-graphs/
-    static_input = torch.randn(BATCH_SIZE, 640, device='cuda')
-    static_target = torch.randn(BATCH_SIZE, device='cuda')
+    static_input = torch.randint(BATCH_SIZE, 640, device='cuda')
+    static_target = torch.randint(BATCH_SIZE, device='cuda')
 
     s = torch.cuda.Stream()
     s.wait_stream(torch.cuda.current_stream())
