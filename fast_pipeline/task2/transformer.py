@@ -15,15 +15,17 @@ class MiniGPT2(nn.Module):
         self.encoder = nn.Embedding(ntoken, d_model)
         self.pos_encoder = PositionalEncoding(d_model, dropout)
         self.d_model = d_model
-        self.decoder = TransformerEncoderLayer(d_model, nhead, d_hid)
+        # в нашем контексте декодер=энкодер
+        self.decoder = TransformerEncoderLayer(d_model, nhead, d_hid, batch_first=True)
         self.pad_idx = pad_idx
 
     def forward(self, src: Tensor) -> Tensor:
+        pad_mask = (src == self.pad_idx).to(src.device)
         src = self.encoder(src) * math.sqrt(self.d_model)
         src = self.pos_encoder(src)
-        pad_mask = (src == self.pad_idx).to(src.device)
-        src_mask = generate_square_subsequent_mask(len(src)).to(src.device)
-        output = self.decoder(src, src_mask, pad_mask)
+        src_mask = generate_square_subsequent_mask(src.shape[1]).to(src.device)
+
+        output = self.decoder(src, src_mask=src_mask, src_key_padding_mask=pad_mask)
         return output
 
 

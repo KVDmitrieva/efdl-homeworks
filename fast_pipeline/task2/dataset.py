@@ -1,4 +1,5 @@
-from typing import Optional
+from collections import defaultdict
+from random import sample, choices
 
 import torch
 from torch.utils.data.dataset import Dataset
@@ -6,9 +7,7 @@ from torch.utils.data import Sampler
 from torchtext.data.utils import get_tokenizer
 from torchtext.vocab import build_vocab_from_iterator
 
-
 MAX_LENGTH = 640
-
 
 __all__ = ["BrainDataset", "BigBrainDataset", "UltraDuperBigBrainDataset",
            "collate_fn", "UltraDuperBigBrainBatchSampler"]
@@ -53,19 +52,40 @@ class BrainDataset(BaseBrainDataset):
 
 class BigBrainDataset(BaseBrainDataset):
     def __init__(self, data_path: str, max_length: int = MAX_LENGTH):
-        super.__init__(data_path, max_length)
+        super().__init__(data_path, max_length)
 
     def __getitem__(self, idx: int):
         token = self.data[idx]
         return token[:-1], token[-1]
 
 
-class UltraDuperBigBrainDataset(Dataset):
-    def __init__(self, data_path: str, max_length: int = MAX_LENGTH, n_bins: int = 1):
-        super.__init__(data_path, max_length)
+class UltraDuperBigBrainDataset(BaseBrainDataset):
+    def __init__(self, data_path: str, max_length: int = MAX_LENGTH, k: int = 640):
+        super().__init__(data_path, max_length)
+
+        self.len_to_inds = defaultdict(list)
+        self.bins = {}
+
+        for i, tokens in enumerate(self.data):
+            n = len(tokens)
+            self.len_to_inds[n].append(i)
+
+        # длин максимум 640 <<< len(data)
+        candidates = sorted(self.len_to_inds.keys())
+        left, right = 0, 1
+        bin_num = 0
+        while right < len(candidates):
+            if candidates[right] - candidates[left] <= k:
+                right += 1
+            else:
+                self.bins[bin_num] = candidates[left:right]
+                bin_num += 1
+                left += 1
+        self.bins[bin_num] = candidates[left:right]
 
     def __getitem__(self, idx: int):
-        pass
+        token = self.data[idx]
+        return token[:-1], token[-1]
 
 
 def collate_fn(batch: list[tuple[torch.Tensor, torch.Tensor]]) -> tuple[torch.Tensor, torch.Tensor]:
@@ -86,12 +106,20 @@ def collate_fn(batch: list[tuple[torch.Tensor, torch.Tensor]]) -> tuple[torch.Te
 
 
 class UltraDuperBigBrainBatchSampler(Sampler):
-
-    def __init__(self, batch_size: int, max_length: Optional[int] = MAX_LENGTH):
-        pass
+    def __init__(self, batch_size: int, bins: dict, inds: dict, len_data):
+        self.bs = batch_size
+        self.len = (len_data + batch_size - 1) // batch_size
+        self.bin = bins
+        self.inds = inds
 
     def __len__(self):
-        pass
+        return self.len
 
     def __iter__(self):
-        pass
+        bin_candidates = list(self.bin.keys())
+        bin_candidates = choices(bin_candidates, k=self.len)
+        for candidate in bin_candidates:
+            inds = []
+            for length in self.bin[candidate]:
+                inds.extend(self.inds[length])
+            yield sample(inds, min(self.bs, len(inds)))
