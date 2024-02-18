@@ -2,11 +2,11 @@ import torch
 from torch import nn
 from tqdm.auto import tqdm
 
-from unet import Unet
+from task1.unet import Unet
 
-from dataset import get_train_data
+from task1.dataset import get_train_data
 
-from scaler import CustomScaler
+from task1.scaler import CustomScaler
 
 
 def train_epoch(
