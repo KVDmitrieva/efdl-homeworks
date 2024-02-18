@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
 from transformer import MiniGPT2
-from dataset import *
+from dataset import BrainDataset, BigBrainDataset, UltraDuperBigBrainDataset, collate_fn, UltraDuperBigBrainBatchSampler
 
 
 class DataMode(Enum):
