@@ -49,21 +49,22 @@ class sync_batch_norm(Function):
         return norm_input, running_mean, running_var
 
     @staticmethod
-    def backward(ctx, grad_output):
+    def backward(ctx, grad_output, grad_mean, grad_var):
         # don't forget to return a tuple of gradients wrt all arguments of `forward`!
 
         z, sqrt_var, m = ctx.saved_tensors
         n = z.shape[1]
         t = 1 / sqrt_var
 
-        reduce_tensors = torch.cat([grad_output, grad_output * z])
+        reduce_tensors = torch.cat([grad_output.sum(dim=0), (grad_output * z).sum(dim=0)])
         dist.all_reduce(reduce_tensors, op=dist.ReduceOp.SUM)
 
         grad_output_sum = reduce_tensors[:n]
         dt = reduce_tensors[n:]
 
         grad_input = (grad_output * m - dt * z * (t ** 2) - grad_output_sum) * t / m
-        return grad_input, None, None, None, None
+        # print("HELLO", grad_input)
+        return grad_input, None, None, None, None, None
 
 
 class SyncBatchNorm(_BatchNorm):
